@@ -62,7 +62,7 @@ def encodeFacet(criteria, kind='locations'):
     :return: the string for that particular type of attribute, which can be used to query the API
     """
     # make sure requested 'kind' is supported
-    assert kind in ['locations', 'genders', 'ageRanges', 'degrees', 'fieldsOfStudy', 'seniorities', 'industries']
+    assert kind in ['locations', 'genders', 'ageRanges', 'degrees', 'fieldsOfStudy', 'seniorities', 'schools', 'industries']
 
     # return joined criteria if they have already been encoded
     if any('urn:urn' in criterion for criterion in criteria if criterion is not None):
@@ -121,7 +121,8 @@ def encodeFacet(criteria, kind='locations'):
 def createRequestDataForAudienceCounts(locations,
                                        genders=None, age_groups=None,
                                        degrees=None, fields=None,
-                                       seniorities=None, industries=None):
+                                       seniorities=None,
+                                       schools=None, industries=None):
     """
     Combine all attributes into single request string, encoding and requesting facets when necessary
     :param locations: list of audience location(s), must always be specified
@@ -133,6 +134,8 @@ def createRequestDataForAudienceCounts(locations,
     :param industries: list of company sectors/industries (optional)
     :return: the string that can be used to query the API and get the desired audience count
     """
+    if genders is None:
+        genders = []
     if age_groups is None:
         age_groups = []
     if degrees is None:
@@ -141,8 +144,11 @@ def createRequestDataForAudienceCounts(locations,
         fields = []
     if seniorities is None:
         seniorities = []
+    if schools is None:
+        schools = []
     if industries is None:
         industries = []
+
 
     tc = """
 q=targetingCriteria&cmTargetingCriteria=
@@ -216,6 +222,18 @@ q=targetingCriteria&cmTargetingCriteria=
       ),segments:List
       ( """
     tc += encodeFacet(criteria=seniorities, kind='seniorities')
+    tc += """   
+      )
+     )
+    )
+   ),
+   (or:List
+    (
+     (facet:
+      (urn:urn:li:adTargetingFacet:schools,name:Member Schools
+      ),segments:List
+      ( """
+    tc += encodeFacet(criteria=schools, kind='schools')
     tc += """   
       )
      )
